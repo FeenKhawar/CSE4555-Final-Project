@@ -62,7 +62,7 @@ from smpl.smpl_webuser.serialization import load_model
 import cv2
 
 ## Load SMPL model (here we load the female model)
-model_path = os.path.join(os.path.dirname(__file__), '../../models/basicModel_f_lbs_10_207_0_v1.0.0.pkl')
+model_path = os.path.join(os.path.dirname(__file__), '../../models/basicModel_m_lbs_10_207_0_v1.0.0.pkl')
 m = load_model(os.path.abspath(model_path))
 
 ## Assign random pose and shape parameters
