@@ -171,9 +171,30 @@ of $(\sigma_{\text{pose}}, \sigma_{\text{shape}})$ combinations, covering
 pose-only, shape-only, and combined noise conditions. Results are recorded in 
 \texttt{RobustnessResults.csv}. Gaussian noise was chosen because it matches 
 the error distributions of real-world pose detectors and depth sensors, making 
-results directly relevant to practical deployment.
+results directly relevant to practical deployment. An image of the clean baseline "T-pose" is given in Figure 2, along with the same pose when injected with Gaussian noise $\varepsilon \sim \mathcal{N}(0, 0.25^2)$ (Figure 3) and $\varepsilon \sim \mathcal{N}(0, 1^2)$ (Figure 4).
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.25\linewidth]{baseline_T_pose.png}
+    \caption{Baseline ("T") pose}
+    \label{fig:baseline_T_pose}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.25\linewidth]{pose_with_0.25STD.png}
+    \caption{Baseline pose + $\varepsilon \sim \mathcal{N}(0, 0.25^2)$}
+    \label{fig:pose_with_0.25STD}
+\end{figure}
 
 \subsection{Innovation}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.25\linewidth]{pose_with_1STD.png}
+    \caption{Baseline pose + $\varepsilon \sim \mathcal{N}(0, 1^2)$}
+    \label{fig:pose_with_1STD}
+\end{figure}
 
 While most SMPL extensions focus on expressiveness or fitting methodology, we 
 instead characterize how the existing forward pass responds to input 
@@ -194,7 +215,14 @@ $\theta$, only to shape parameters $\beta$, and to both simultaneously. Noise
 level $\sigma$ was swept from 0.0 to 1.0 in steps of 0.1, producing 121 total 
 experimental conditions (an $11 \times 11$ grid). For each we recorded mean 
 vertex displacement (MVD) and its standard deviation across all 6,890 vertices, 
-stored in \texttt{RobustnessResults.csv}.
+stored in \texttt{RobustnessResults.csv}. A heatmap is provided in Figure 5 to help visualize the results.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{robustness_heatmap.png}
+    \caption{Heatmap of mean vertex displacement}
+    \label{fig:heatmap}
+\end{figure}
 
 \subsection{Pose-Only Noise ($\sigma_{\text{shape}} = 0$)}
 
@@ -316,16 +344,16 @@ estimation.
 
     \item \textbf{No per-joint breakdown.} We perturbed all 72 pose parameters at once, so we cannot tell from our results which specific joints are most responsible for the large displacements. Perturbing one joint at a time would give a much more useful sensitivity map you would know exactly which joints to be most careful about.
 
-    \item \textbf{CPU only, no batching.} The Chumpy library runs on CPU and processes one body at a time. This made the 121-condition sweep slow. A PyTorch reimplementation would run on GPU, support batched inference, and make larger experiments practical.
+    % \item \textbf{CPU only, no batching.} The Chumpy library runs on CPU and processes one body at a time. This made the 121-condition sweep slow. A PyTorch reimplementation would run on GPU, support batched inference, and make larger experiments practical.
 
-    \item \textbf{Female model only.} All experiments used the female SMPL model. The male and gender-neutral models have different learned parameters and might show slightly different sensitivity characteristics. A complete study would test all three.
+    \item \textbf{Male model only.} All experiments used the male SMPL model. The female and gender-neutral models have different learned parameters and might show slightly different sensitivity characteristics. A complete study would test all three.
 
     \item \textbf{Chumpy compatibility issues.} Chumpy has known compatibility problems with Python 3.12 due to removed functions like \texttt{inspect.getargspec}. We had to use Python 3.10 to keep everything running. This is a fragile dependency that limits who can reproduce the experiments without extra setup work.
 
-\end{itemize}.
+\end{itemize}
 
 \section{Conclusion and future work}\label{sec:concl}
-e tested how SMPL behaves when its input parameters are noisy something that 
+We tested how SMPL behaves when its input parameters are noisy something that 
 happens all the time in real applications. Across 121 experiments, the finding was 
 consistent: pose noise is far more damaging than shape noise, with vertex displacements 
 40$\times$ to 100$\times$ larger at the same noise level. At $\sigma = 0.1$, pose noise 
@@ -344,6 +372,8 @@ practical systems. These extensions would turn this robustness study from a soli
 baseline into something much more useful for people building on top of SMPL.  \medskip
 
 \section{Contributions}
+
+The work contributions of the literature review were split between Faheem and Vijay, with Faheem doing the first two papers mentioned (~40\%) while Vijay did the remaining 3 (~60\%). All code, results, outputs, and images (barring Figure 1) was upon Faheem (100\%). Faheem was responsible for the abstract and Data segments of the paper, along with a revised version of the literature review, or related works. Vijay was responsible for the Introduction, Methods, Experiments and Results, Project Limitations, and Conclusion and future work segments, along with Figure 1. The paper contributions were split with 40\% from Faheem and 60\% from Vijay.
 
 \small
 %Your references will be automatically populated here as long as you enter them correctly into your .bib file. An example is attached
