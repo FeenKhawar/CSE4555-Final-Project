@@ -58,7 +58,7 @@ encounter: real-world inputs to SMPL are noisy. Keypoint detectors make
 localization errors, depth sensors produce noisy point clouds, and video-based 
 pose estimators are affected by motion blur and occlusion. When these noisy 
 estimates are fed into SMPL, how badly does the output mesh degrade? And which 
-parameter --- pose or shape --- is the model more sensitive to? Answering these 
+parameter that can be pose or shape of the model more sensitive to? Answering these 
 questions matters because it tells engineers where to spend their 
 error-reduction budget, and it tells researchers which parts of the pipeline 
 most need robustness improvements.
@@ -136,6 +136,18 @@ Forward kinematics traverses the 24-joint kinematic tree to compute global
 joint transforms $G_k$, and finally linear blend skinning produces the output: 
 $\mathbf{v}_i = \sum_{k} w_{i,k} \cdot G_k \cdot \mathbf{v}_{i}{\text{ posed}}$.
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{image1.png}
+    \caption{SMPL forward pass architecture. Shape parameters $\beta$ flow 
+    through shape blend shapes and joint regression (green pathway), while 
+    pose parameters $\theta$ drive pose blend shapes and forward kinematics 
+    (orange pathway). Both pathways converge at linear blend skinning to 
+    produce the final output mesh of 6,890 vertices. Dashed arrows indicate 
+    noise injection targets for this project: $\beta$ at stages 1--2 and 
+    $\theta$ at stages 3--4--5.}
+    \label{fig:smpl_arch}
+\end{figure}
 \subsection{Implementation}
 
 The project uses the official SMPL Python codebase with Chumpy for lazy 
@@ -190,7 +202,7 @@ Pose noise had the largest impact by far. Starting from zero displacement at
 $\sigma = 0.0$, MVD climbed to $9.4$ cm $\pm$ $5.3$ cm at $\sigma = 0.1$, 
 then to $19.2$ cm $\pm$ $15.1$ cm at $\sigma = 0.2$. By $\sigma = 0.4$ it was 
 already at $56.3$ cm $\pm$ $36.8$ cm. The worst single result was at 
-$\sigma = 0.8$ with $79.8$ cm $\pm$ $40.9$ cm --- at that point the mesh is 
+$\sigma = 0.8$ with $79.8$ cm $\pm$ $40.9$ cm at that point the mesh is 
 visually broken. The curve is not perfectly monotonic: $\sigma = 0.6$ drops 
 back to $30.5$ cm $\pm$ $19.2$ cm before climbing again, which reflects the 
 randomness of single-sample noise rather than a real structural dip.
@@ -216,7 +228,7 @@ randomness of single-sample noise rather than a real structural dip.
 \end{tabular}
 \end{table}
 
-The high standard deviations --- often more than half the mean --- tell you 
+The high standard deviations, often more than half the mean, tell you 
 that a single noisy sample can produce very different results at the same 
 $\sigma$ level. Some trials barely distort the mesh; others completely deform 
 it. This variability grows with $\sigma$, which is exactly what you would 
@@ -226,7 +238,7 @@ chain.
 \subsection{Shape-Only Noise ($\sigma_{\text{pose}} = 0$)}
 
 Shape noise barely moved the needle. At $\sigma = 0.1$ the MVD was just 
-$1.7$ mm $\pm$ $0.7$ mm --- essentially imperceptible. Even at $\sigma = 0.6$ 
+$1.7$ mm $\pm$ $0.7$ mm - essentially imperceptible. Even at $\sigma = 0.6$ 
 it was only $2.4$ cm $\pm$ $1.3$ cm, and the highest value across the entire 
 sweep was $3.2$ cm $\pm$ $1.1$ cm at $\sigma = 0.9$.
 
@@ -251,8 +263,8 @@ sweep was $3.2$ cm $\pm$ $1.1$ cm at $\sigma = 0.9$.
 \end{tabular}
 \end{table}
 
-The non-monotonic pattern here --- MVD actually drops at $\sigma = 0.5$ after 
-rising at $\sigma = 0.4$ --- is a sign of single-trial variance at small 
+The non-monotonic pattern here, MVD actually drops at $\sigma = 0.5$ after 
+rising at $\sigma = 0.4$ - is a sign of single-trial variance at small 
 displacement scales where random chance dominates. The overall trend is still 
 clear: shape noise causes very little damage regardless of magnitude.
 
@@ -260,7 +272,7 @@ clear: shape noise causes very little damage regardless of magnitude.
 
 When both parameters were perturbed simultaneously, results were dominated by 
 pose noise at every level. At $\sigma = 0.1$ for both, MVD was 
-$13.4$ cm $\pm$ $12.3$ cm --- higher than pose-only at the same level 
+$13.4$ cm $\pm$ $12.3$ cm, higher than pose-only at the same level 
 ($9.4$ cm) due to the extra shape contribution, but the shape term adds 
 relatively little. At $\sigma = 0.4$ combined it was $67.7$ cm $\pm$ $56.1$ cm, 
 and at $\sigma = 0.8$ combined it reached $72.9$ cm $\pm$ $51.6$ cm. A few 
@@ -272,7 +284,7 @@ notable combined results from the full 121-row grid worth calling out:
     \item $\sigma_{\text{pose}} = 0.7$, $\sigma_{\text{shape}} = 1.0$ 
     $\rightarrow$ $70.9$ cm $\pm$ $52.4$ cm
     \item $\sigma_{\text{pose}} = 0.3$, $\sigma_{\text{shape}} = 0.1$ 
-    $\rightarrow$ $61.6$ cm $\pm$ $45.7$ cm --- notably high for a moderate 
+    $\rightarrow$ $61.6$ cm $\pm$ $45.7$ cm - notably high for a moderate 
     pose $\sigma$, showing how a single unlucky noise draw can produce large 
     displacements even at lower $\sigma$
 \end{itemize}
@@ -282,7 +294,7 @@ notable combined results from the full 121-row grid worth calling out:
 The numbers tell a consistent story across all 121 conditions. Pose noise 
 produces displacements $40\times$ to $100\times$ larger than equivalent shape 
 noise. At $\sigma = 0.1$, pose alone causes $9.4$ cm displacement while shape 
-alone causes $1.7$ mm --- a ratio of $55\times$. At $\sigma = 0.3$ the ratio 
+alone causes $1.7$ mm, a ratio of $55\times$. At $\sigma = 0.3$ the ratio 
 is $44\times$ ($38.9$ cm vs $0.89$ cm). At $\sigma = 0.5$ it exceeds 
 $100\times$ ($53.8$ cm vs $0.32$ cm).
 
@@ -298,11 +310,11 @@ estimation.
 
 \begin{itemize}
 
-    \item \textbf{Single trial per condition.} For each noise level we only ran one random sample instead of averaging over many. This is why some results look non-monotonic --- one unlucky noise draw can spike or drop the MVD. Running say 50 trials per condition and reporting the average would give much cleaner and more trustworthy curves.
+    \item \textbf{Single trial per condition.} For each noise level we only ran one random sample instead of averaging over many. This is why some results look non-monotonic one unlucky noise draw can spike or drop the MVD. Running say 50 trials per condition and reporting the average would give much cleaner and more trustworthy curves.
 
     \item \textbf{Gaussian noise is a simplification.} Real-world errors from pose detectors or depth sensors do not follow a perfect Gaussian distribution. They tend to be correlated across joints and biased in certain directions. Our noise model is a reasonable starting point but does not fully capture what happens in a real deployment.
 
-    \item \textbf{No per-joint breakdown.} We perturbed all 72 pose parameters at once, so we cannot tell from our results which specific joints are most responsible for the large displacements. Perturbing one joint at a time would give a much more useful sensitivity map --- you would know exactly which joints to be most careful about.
+    \item \textbf{No per-joint breakdown.} We perturbed all 72 pose parameters at once, so we cannot tell from our results which specific joints are most responsible for the large displacements. Perturbing one joint at a time would give a much more useful sensitivity map you would know exactly which joints to be most careful about.
 
     \item \textbf{CPU only, no batching.} The Chumpy library runs on CPU and processes one body at a time. This made the 121-condition sweep slow. A PyTorch reimplementation would run on GPU, support batched inference, and make larger experiments practical.
 
@@ -313,12 +325,12 @@ estimation.
 \end{itemize}.
 
 \section{Conclusion and future work}\label{sec:concl}
-e tested how SMPL behaves when its input parameters are noisy --- something that 
+e tested how SMPL behaves when its input parameters are noisy something that 
 happens all the time in real applications. Across 121 experiments, the finding was 
 consistent: pose noise is far more damaging than shape noise, with vertex displacements 
 40$\times$ to 100$\times$ larger at the same noise level. At $\sigma = 0.1$, pose noise 
 alone moves vertices by 9.4 cm on average while shape noise causes less than 2 mm. 
-The reason is simple --- pose errors compound through the kinematic chain joint by 
+The reason is simple pose errors compound through the kinematic chain joint by 
 joint, while shape errors are just small additive offsets that stay local. If you are 
 using SMPL in any real pipeline, getting your pose estimates right matters far more 
 than getting your shape right.
